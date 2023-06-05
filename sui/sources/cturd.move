@@ -20,7 +20,7 @@ module sui_cturd::cturd {
     }
 
     entry fun update_potato(potato: &mut Potato, grams: u64) {
-        potato.grams = grams;
+        potato.grams = grams + 1;
     }
 
     entry fun weigh_potato(potato: &Potato): u64 {

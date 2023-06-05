@@ -1,6 +1,8 @@
 [package]
 name = "sui_cturd"
 version = "0.0.1"
+# published-at = "0xd36ac07fd777ed42b5ce9df6ccc175272ce9f4e4f84f3868502cf8f591bc7f1a"
+published-at = "	0x0e52a4bb50794464efbb31b0c41a61356ea8bc71fff97ebe4cc4c94e3effd746"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/devnet" }
