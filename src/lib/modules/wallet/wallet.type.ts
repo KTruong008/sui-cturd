@@ -33,4 +33,7 @@ export interface WalletStore {
   signTransactionBlock(input: {
     transactionBlock: Uint8Array | TransactionBlock;
   }): Promise<SignedTransaction>;
+
+  initializeWallet: any;
+  adapterListeners: any[];
 }

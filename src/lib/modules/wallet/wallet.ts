@@ -34,13 +34,42 @@ function createWalletStore() {
     select,
     disconnect,
     getAccounts,
-    signTransactionBlock
+    signTransactionBlock,
+
+    initializeWallet,
+    adapterListeners: []
   });
 
   function initializeWallet() {
-    // walletName
-    // const { localStorageKey } = get(wallet$);
-    // setLocalStorage(localStorageKey, walletName);
+    const { connecting, connected, wallet, localStorageKey, adapters, status } =
+      get(wallet$);
+
+    // Clear out any existing event listeners
+    removeAdapterEventListeners();
+
+    // Select wallet
+    if (!wallet && !connected && !connecting) {
+      const preferredWallet = getLocalStorage(localStorageKey);
+      if (typeof preferredWallet === 'string') {
+        select(preferredWallet);
+      }
+    }
+
+    // Set local storage
+    if (connected && wallet) {
+      setLocalStorage(localStorageKey, wallet.name);
+    }
+
+    // Add event listeners
+    addAdapterEventListeners(adapters);
+
+    // Update wallet state
+    wallet$.update((walletStore) => ({
+      ...walletStore,
+      connected: status === WalletConnectionStatus.CONNECTED,
+      connecting: status === WalletConnectionStatus.CONNECTING,
+      isError: status === WalletConnectionStatus.ERROR
+    }));
   }
 
   return {
@@ -49,44 +78,36 @@ function createWalletStore() {
   };
 }
 
+/**
+ * Event listeners for adapters
+ */
 function addAdapterEventListeners(walletAdapterList: WalletAdapterList) {
   const walletProviders = walletAdapterList.filter(isWalletProvider);
   if (!walletProviders.length) return;
 
-  // Re-resolve the adapters just in case a provider has injected
-  // before we've been able to attach an event listener:
-  wallet$.update((walletStore) => ({
-    ...walletStore,
-    wallets: resolveAdapters(walletAdapterList)
-  }));
-
-  walletProviders.forEach((walletProvider) => {
+  const adapterListeners = walletProviders.map((walletProvider) =>
     walletProvider.on('changed', () => {
       wallet$.update((walletStore) => ({
         ...walletStore,
         wallets: resolveAdapters(walletAdapterList)
       }));
-    });
+    })
+  );
+
+  wallet$.update((walletStore) => ({
+    ...walletStore,
+    wallets: resolveAdapters(walletAdapterList),
+    adapterListeners
+  }));
+}
+
+function removeAdapterEventListeners() {
+  const { adapterListeners } = get(wallet$);
+
+  adapterListeners.forEach((unlisten) => {
+    // Adapater-specific method returned from 'changed' event listener
+    unlisten();
   });
-}
-
-async function signTransactionBlock(input: {
-  transactionBlock: Uint8Array | TransactionBlock;
-}): Promise<SignedTransaction> {
-  const { wallet } = get(wallet$);
-
-  if (!wallet) throw new Error('Wallet Not Connected');
-  if (!wallet.signTransactionBlock)
-    throw new Error('Wallet does not support "signTransactionBlock" method');
-
-  return wallet.signTransactionBlock(input as any);
-}
-
-async function getAccounts(): Promise<any> {
-  const { wallet } = get(wallet$);
-
-  if (!wallet) throw new Error('Wallet Not Connected');
-  return wallet.getAccounts();
 }
 
 /**
@@ -127,6 +148,9 @@ async function select(walletName: string) {
   }
 }
 
+/**
+ * Disconnect wallet
+ */
 async function disconnect() {
   const { wallet, localStorageKey } = get(wallet$);
 
@@ -139,6 +163,28 @@ async function disconnect() {
     }));
     setLocalStorage(localStorageKey, null);
   }
+}
+
+/**
+ * Sign transaction block
+ */
+async function signTransactionBlock(input: {
+  transactionBlock: Uint8Array | TransactionBlock;
+}): Promise<SignedTransaction> {
+  const { wallet } = get(wallet$);
+
+  if (!wallet) throw new Error('Wallet Not Connected');
+  if (!wallet.signTransactionBlock)
+    throw new Error('Wallet does not support "signTransactionBlock" method');
+
+  return wallet.signTransactionBlock(input as any);
+}
+
+async function getAccounts(): Promise<any> {
+  const { wallet } = get(wallet$);
+
+  if (!wallet) throw new Error('Wallet Not Connected');
+  return wallet.getAccounts();
 }
 
 function getInitialAdapters(
