@@ -1,11 +1,6 @@
 import { get, writable } from 'svelte/store';
-import type {
-  SuiAddress,
-  SuiTransactionBlockResponse,
-  SignedTransaction,
-  TransactionBlock
-} from '@mysten/sui.js';
-import type { WalletAdapter, WalletAdapterList } from '@mysten/wallet-adapter-base';
+import type { SignedTransaction, TransactionBlock } from '@mysten/sui.js';
+import type { WalletAdapterList } from '@mysten/wallet-adapter-base';
 import { isWalletProvider, resolveAdapters } from '@mysten/wallet-adapter-base';
 import { WalletStandardAdapterProvider } from '@mysten/wallet-adapter-wallet-standard';
 import { UnsafeBurnerWalletAdapter } from '@mysten/wallet-adapter-unsafe-burner';
@@ -74,8 +69,13 @@ function createWalletStore() {
 
   return {
     subscribe,
-    update
+    update,
+    initializeWallet
   };
+}
+
+export async function initialize() {
+  wallet$.initializeWallet();
 }
 
 /**

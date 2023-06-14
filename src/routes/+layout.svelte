@@ -1,5 +1,8 @@
 <script>
-	import '../app.css';
+  import '../app.css';
+  import WalletProvider from '../lib/modules/wallet/wallet-provider.svelte';
 </script>
 
-<slot />
+<WalletProvider>
+  <slot />
+</WalletProvider>
