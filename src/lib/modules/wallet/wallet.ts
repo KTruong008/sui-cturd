@@ -45,6 +45,7 @@ function createWalletStore() {
     // Select wallet
     if (!wallet && !connected && !connecting) {
       const preferredWallet = getLocalStorage(localStorageKey);
+
       if (typeof preferredWallet === 'string') {
         select(preferredWallet);
       }
