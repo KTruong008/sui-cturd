@@ -24,7 +24,7 @@ function createWalletStore() {
     wallets: initialWallets,
 
     wallet: null,
-    localStorageKey: 'preferredSuiWallet',
+    storageKey: 'preferredSuiWallet',
 
     status: WalletConnectionStatus.DISCONNECTED,
     connecting: false,
@@ -36,39 +36,31 @@ function createWalletStore() {
     getAccounts,
     signTransactionBlock,
 
-    initializeWallet,
+    initialize,
     adapterListeners: []
   });
 
-  async function initializeWallet({ autoConnect = true }) {
-    const {
-      connecting,
-      connected,
-      wallets,
-      wallet,
-      localStorageKey,
-      adapters,
-      status
-    } = get(wallet$);
+  async function initialize({ autoConnect = true }) {
+    const { connecting, connected, wallet, storageKey, adapters, status } =
+      get(wallet$);
 
     // Clear out any existing event listeners
     removeAdapterEventListeners();
 
-    // Select wallet
-    if (!wallet && !connected && !connecting) {
-      const preferredWallet = getLocalStorage(localStorageKey);
-
-      if (!!preferredWallet && typeof preferredWallet === 'string') {
-        await select(preferredWallet);
-      } else if (autoConnect) {
-        // @NOTE Temporary measure. Works with Sui & Suiet wallets, but not Ethos
-        await select('Sui Wallet');
-      }
-    }
-
     // Set local storage
     if (connected && wallet) {
-      setLocalStorage(localStorageKey, wallet.name);
+      setLocalStorage(storageKey, wallet.name);
+    }
+
+    // Auto-connect wallet
+    if (!wallet && !connected && !connecting && autoConnect) {
+      const preferredWalletName = getLocalStorage(storageKey);
+
+      if (!!preferredWalletName && typeof preferredWalletName === 'string') {
+        await select(preferredWalletName);
+        // @NOTE Temporary measure. Works with Sui & Suiet wallets, but not Ethos
+        // await select('Sui Wallet');
+      }
     }
 
     // Add event listeners
@@ -86,6 +78,6 @@ function createWalletStore() {
   return {
     subscribe,
     update,
-    initializeWallet
+    initialize
   };
 }

@@ -9,6 +9,9 @@ export enum WalletConnectionStatus {
   ERROR = 'ERROR'
 }
 
+/**
+ * Based off of wallet-adapter-react example from @mysten
+ */
 export interface WalletStore {
   /**
    * Wallets are like the actual adapters (for wallet), and "adapters" are wallets with extra steps, and an extra "change" event listener.
@@ -19,7 +22,8 @@ export interface WalletStore {
 
   // Wallet that we are currently connected to
   wallet: WalletAdapter | null;
-  localStorageKey: string;
+  // LocalStorage key
+  storageKey: string;
 
   // States
   status: WalletConnectionStatus;
@@ -36,7 +40,7 @@ export interface WalletStore {
   }): Promise<SignedTransaction>;
 
   // Misc.
-  initializeWallet: any;
+  initialize: any;
   // Used solely to keep track of and remove event listeners
   adapterListeners: any[];
 }

@@ -1,16 +1,23 @@
-import { get, writable } from 'svelte/store';
+import { get } from 'svelte/store';
 import type { SignedTransaction, TransactionBlock } from '@mysten/sui.js';
 import type { WalletAdapterList } from '@mysten/wallet-adapter-base';
 import { isWalletProvider, resolveAdapters } from '@mysten/wallet-adapter-base';
 import { WalletStandardAdapterProvider } from '@mysten/wallet-adapter-wallet-standard';
 import { UnsafeBurnerWalletAdapter } from '@mysten/wallet-adapter-unsafe-burner';
 
-import { getLocalStorage, setLocalStorage } from './local-storage';
-import { WalletConnectionStatus, type WalletStore } from './wallet.type';
+import { setLocalStorage } from './local-storage';
+import { WalletConnectionStatus } from './wallet.type';
 import { wallet$ } from './wallet';
 
-export async function initialize({ autoConnect = true }) {
-  wallet$.initializeWallet({
+/**
+ * Initialize wallet
+ *
+ * - Connect to wallet
+ * - Set up event listeners for adapters
+ * - Set initial state
+ */
+export async function initializeWallet({ autoConnect = true }) {
+  wallet$.initialize({
     autoConnect
   });
 }
@@ -51,16 +58,15 @@ export function removeAdapterEventListeners() {
  * Select wallet
  */
 export async function select(walletName: string) {
-  const { wallets, localStorageKey } = get(wallet$);
+  const { wallets, storageKey } = get(wallet$);
   const selectedWallet = wallets.find((wallet) => wallet?.name === walletName) ?? null;
-  setLocalStorage(localStorageKey, walletName);
 
   wallet$.update((walletStore) => ({
     ...walletStore,
     wallet: selectedWallet
   }));
 
-  if (selectedWallet && !selectedWallet.connecting) {
+  if (selectedWallet && !selectedWallet?.connecting) {
     try {
       wallet$.update((walletStore) => ({
         ...walletStore,
@@ -72,6 +78,7 @@ export async function select(walletName: string) {
         ...walletStore,
         status: WalletConnectionStatus.CONNECTED
       }));
+      setLocalStorage(storageKey, walletName);
     } catch (error) {
       console.log('Wallet connection error', error);
       wallet$.update((walletStore) => ({
@@ -91,16 +98,17 @@ export async function select(walletName: string) {
  * Disconnect wallet
  */
 export async function disconnect() {
-  const { wallet, localStorageKey } = get(wallet$);
+  const { wallet, storageKey } = get(wallet$);
+
+  setLocalStorage(storageKey, null);
 
   if (wallet) {
-    await wallet.disconnect();
+    await wallet?.disconnect?.();
     wallet$.update((walletStore) => ({
       ...walletStore,
       status: WalletConnectionStatus.DISCONNECTED,
       wallet: null
     }));
-    setLocalStorage(localStorageKey, null);
   }
 }
 
@@ -113,9 +121,10 @@ export async function signTransactionBlock(input: {
   const { wallet } = get(wallet$);
 
   if (!wallet) throw new Error('Wallet Not Connected');
-  if (!wallet.signTransactionBlock)
+  if (!wallet?.signTransactionBlock)
     throw new Error('Wallet does not support "signTransactionBlock" method');
 
+  // Some type mismatch, but I think it's actually correct.
   return wallet.signTransactionBlock(input as any);
 }
 
@@ -123,9 +132,13 @@ export async function getAccounts(): Promise<any> {
   const { wallet } = get(wallet$);
 
   if (!wallet) throw new Error('Wallet Not Connected');
+
   return wallet.getAccounts();
 }
 
+/**
+ * Utilities
+ */
 export function getInitialAdapters(
   configuredAdapters = null,
   enableUnsafeBurner = false,
