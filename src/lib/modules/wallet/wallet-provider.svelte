@@ -1,13 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { initialize } from './wallet';
+  import { initialize } from './wallet-utils';
 
-  // export let localStorageKey: string;
+  export let autoConnect = true;
+  // export let localStorageKey = 'preferredSuiWallet';
   // export let wallets: Adapter[];
-  // export let autoConnect = false;
 
   onMount(() => {
-    initialize();
+    initialize({
+      autoConnect
+      // wallets,
+    });
   });
 </script>
 

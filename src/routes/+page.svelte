@@ -1,11 +1,11 @@
 <script lang="ts">
   import { wallet$ } from '$lib/modules/wallet/wallet';
 
-  let wallet = $wallet$;
+  $: wallet = $wallet$;
 
-  wallet.wallets.forEach((w) => {
-    console.log(w.name);
-  });
+  $: {
+    console.log('page wallet: ', wallet);
+  }
 </script>
 
 <h1>Welcome to SvelteKit</h1>
