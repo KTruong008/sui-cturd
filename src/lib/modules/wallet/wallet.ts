@@ -12,6 +12,7 @@ import {
   removeAdapterEventListeners,
   addAdapterEventListeners
 } from './wallet-utils';
+import { DEFAULT_STORAGE_KEY } from './wallet.constant';
 
 export const wallet$ = createWalletStore();
 
@@ -24,7 +25,7 @@ function createWalletStore() {
     wallets: initialWallets,
 
     wallet: null,
-    storageKey: 'preferredSuiWallet',
+    storageKey: DEFAULT_STORAGE_KEY,
 
     status: WalletConnectionStatus.DISCONNECTED,
     connecting: false,

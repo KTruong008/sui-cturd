@@ -114,6 +114,8 @@ export async function disconnect() {
 
 /**
  * Sign transaction block
+ *
+ * Just a wrapper around the wallet's signTransactionBlock method.
  */
 export async function signTransactionBlock(input: {
   transactionBlock: Uint8Array | TransactionBlock;
